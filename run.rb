@@ -12,10 +12,10 @@ module Enumerable
     # we are calling provided proc object so executed was everything from it.
     # But remember it's not another mapping there, we just execute code on that one row in own_map context
 
-    futures = map { |each_row|  Concurrent::Future.execute{ block.call(each_row) } }
+    futures = map { |each_row|  {name: each_row, value: Concurrent::Future.execute{ block.call(each_row) } } }
 
     #here we are waiting for data from Concurrent job
-    futures.map { |future|  future.value }
+    futures.map { |feature_row|  "[ #{feature_row[:name]} ]---> #{feature_row[:value].value}" }
   end
 end
 
