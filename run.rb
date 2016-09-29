@@ -1,5 +1,6 @@
 # Example how to write own weird proc function inside own enumerable method
 
+require 'concurrent'
 require 'open-uri'
 
 module Enumerable
@@ -11,7 +12,10 @@ module Enumerable
     # we are calling provided proc object so executed was everything from it.
     # But remember it's not another mapping there, we just execute code on that one row in own_map context
 
-    futures = map { |each_row| puts "ABC -> #{block.call(each_row)} <- CBA" }
+    futures = map { |each_row|  Concurrent::Future.execute{ block.call(each_row) } }
+
+    #here we are waiting for data from Concurrent job
+    futures.map { |future|  future.value }
   end
 end
 
@@ -22,5 +26,5 @@ array = [
     "http://onet.pl",
     "http://wp.pl"
 ]
-
-array.own_map { |url,d| puts "#{url} ----> #{open(url).length}" }
+# In context of that proc functon we are working on untouched array
+puts array.own_map { |url| open(url).length }
